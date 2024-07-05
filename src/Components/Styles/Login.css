@@ -1,0 +1,160 @@
+/* styles.css */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+
+.Login-logo {
+    margin-top: 30px;
+    width: 200px;
+    height: 120px;
+    margin-bottom: 20px;
+}
+
+.Login-Container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+}
+
+.Login-Form {
+    display: flex;
+    flex-direction: column;
+    width: 320px;
+}
+
+.Login-Form input {
+    margin-bottom: 15px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+}
+
+label {
+   
+    color: #2d2d2d;
+}
+
+button {
+    margin-top: 10px;
+    margin-bottom: 19px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.Login-PasswordInputContainer {
+    position: relative;
+    display: flex;
+}
+
+.Login-PasswordInput {
+    padding-right: 20px;
+    flex: 1;
+}
+
+.Login-TogglePasswordButton {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #777;
+}
+
+.Login-ForgotPassword {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+
+.Login-ClickableText {
+    color: #4285f4;
+    cursor: pointer;
+}
+
+.ClickableText:hover {
+    color: #004b91;
+}
+
+.Login-SocialLogin {
+    margin-left: 25px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 20px;
+}
+
+hr {
+    height: 1px;
+    background-color: #ddd;
+    border: none;
+    margin: 20px 0;
+}
+
+.Login-SocialLoginBox {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-left: 8px;
+}
+
+.Login-SocialLoginLogo {
+    width: 24px;
+    height: 22px;
+    margin-right: 8px;
+}
+
+.Login-HorizontalLines {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+   
+}
+
+.Login-HorizontalLine {
+    flex-grow: 1;
+    height: 1px;
+    background-color: #777;
+    margin: 0 10px;
+}
+
+.Login-Divider {
+    color: #777;
+    font-size: 14px;
+}
+
+.Login-footer {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.Login-footer span {
+    margin-right: 5px;
+}
+
+.Login-footer a {
+    color: #4285f4;
+    text-decoration: none;
+    font-weight: bold;
+}

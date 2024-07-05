@@ -1,0 +1,112 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+.Intro{
+    margin-top: 20px;
+margin-left: 50px;
+}
+.Intro p{
+    font-weight:700;
+}
+.search {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+  width: 50%;
+  align-self: center;
+}
+.search-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+  .search input {
+    display: flex;
+    padding: 20px 24px 20px 20px;
+    justify-content: flex-end;
+    align-items: center;
+    border-radius: 50px;
+    border: 1px solid #ccdce1;
+    background: #fff;
+    background-image: url("D:/Workspace/React Projects/Job Portal/job-finder/src/Components/Assests/search.png");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  #input1 {
+    background-image: url("D:/Workspace/React Projects/Job Portal/job-finder/src/Components/Assests/dropdown.png");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    margin-left: 28px;
+    margin-right: 28px;
+  }
+  .Jobs {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    padding: 20px; 
+    border: 1px solid #ccc; 
+    border-radius: 10px; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    margin-bottom: 20px; 
+    width: 60%;
+  }
+  #jobs-search{
+    color: #fff;
+  text-align: center;
+  font-family: Inter;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  border-radius: 39px;
+  background: #2062e2;
+  padding: 13px 25px;
+  text-decoration: none;
+  margin-left: auto;
+  }
+
+  .JobsListing {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px;
+  }
+  
+  .child1 {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .child1 img {
+    width: 150px; 
+    height: 80px; 
+    border-radius: 50%; 
+    margin-bottom: 10px; 
+  }
+  
+  .child2,
+  .child3 {
+    flex: 1;
+    flex-direction: column;
+    padding: 0 20px; 
+  }
+  
+  h2 {
+    font-size: 20px; 
+  }
+  
+  h4 {
+    font-size: 14px; 
+    color: #555; 
+  }
+  
+  p {
+    font-size: 16px;
+  }
+  
