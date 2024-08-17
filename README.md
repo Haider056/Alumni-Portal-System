@@ -5,7 +5,7 @@
   }
 </style>
 
-<a href="https://istalumniportal.netlify.app/" target="_blank">
+<a href="https://istalumniportal.netlify.app/" style="margin-bottom:20" target="_blank">
   Live at: https://istalumniportal.netlify.app/
 </a>
 <br />
