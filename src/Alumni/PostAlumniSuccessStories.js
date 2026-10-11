@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import Header from "../Components/Header";
-import Footer from "../Components/Footer";
-import Job1 from "../Components/Assets/UpcomingEvents.png";
-import AlumniHeader from "../Alumni/AlumniHeader";
-import AdminHeader from "../Admin/AdminHeader";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { AppShell, PageHeader, FormSection, FormActions, Notice, Avatar } from '../Components/ui';
+
 export default function PostAlumniSuccessStories() {
   const [alumniData, setAlumniData] = useState({
-    alumni_name: "",
-    graduation_year: "",
-    department_name: "",
-    success_story: "",
-    alumni_email: "",
+    alumni_name: '',
+    graduation_year: '',
+    department_name: '',
+    success_story: '',
+    alumni_email: '',
   });
   const [userRole, setUserRole] = useState('');
+  const [status, setStatus] = useState(null);
+
   useEffect(() => {
     const storedRole = localStorage.getItem('role');
     if (storedRole) {
@@ -20,125 +20,83 @@ export default function PostAlumniSuccessStories() {
       setUserRole(parsedRole.role);
     }
   }, []);
+
   useEffect(() => {
-    const alumniName = localStorage.getItem("name");
-    const alumniEmail = localStorage.getItem("email");
+    const alumniName = localStorage.getItem('name');
+    const alumniEmail = localStorage.getItem('email');
     if (alumniName) {
-      setAlumniData((prevData) => ({
-        ...prevData,
-        alumni_name: alumniName,
-        alumni_email: alumniEmail,
-      }));
+      setAlumniData((prevData) => ({ ...prevData, alumni_name: alumniName, alumni_email: alumniEmail }));
     }
   }, []);
 
-  const handlePostJob = async () => {
+  const handlePostJob = async (e) => {
+    if (e) e.preventDefault();
     try {
-      const response = await fetch(
-        "http://localhost:3001/auth/createSuccessStory",
-        {
-          method: "POST",
-          credentials: "include",
-          body: JSON.stringify(alumniData),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const responseData = await response.json();
-        alert(responseData.message);
-      } else {
-        const responseData = await response.json();
-        alert(responseData.message);
-      }
+      const response = await fetch('http://localhost:3001/auth/createSuccessStory', {
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify(alumniData),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const responseData = await response.json();
+      setStatus({ tone: response.ok ? 'success' : 'danger', text: responseData.message });
     } catch (error) {
-      console.error("Error during fetch:", error);
+      console.error('Error during fetch:', error);
+      setStatus({ tone: 'danger', text: 'Could not publish your story. Please try again.' });
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-
     const updatedValue = name === 'graduation_year' ? parseInt(value) : value;
-    
-    setAlumniData({
-      ...alumniData,
-      [name]: updatedValue,
-    });
+    setAlumniData({ ...alumniData, [name]: updatedValue });
   };
 
+  const words = alumniData.success_story ? alumniData.success_story.trim().split(/\s+/).filter(Boolean).length : 0;
+
   return (
-    <div className="flex flex-col bg-white">
-         {userRole === 'alumni' ? (
-        <AlumniHeader />
-      ) : userRole === 'student' ? (
-        <Header />
-      ) : userRole === 'admin' ? (
-        <AdminHeader />
-      ) : null}
-      <div className="relative overflow-hidden flex items-center justify-center pt-24 pr-16 pb-20 pl-20 w-full text-6xl font-semibold text-white min-h-[250px] max-md:px-5 max-md:pt-10 max-md:max-w-full max-md:text-4xl">
-        <img
-          loading="lazy"
-          src={Job1}
-          className="object-cover absolute inset-0 w-full h-full"
-          alt="Events1"
-        />
-        <div className="relative z-10">Alumni Success Stories</div>
+    <AppShell role={userRole}>
+      <PageHeader
+        eyebrow="Alumni"
+        title="Share your success story"
+        description="A short story about your path since IST. It is shown to students on the home page."
+        actions={<Link to="/PostedSuccessStories" className="btn btn-secondary">My stories</Link>}
+      />
+      <div className="page py-8">
+        <form onSubmit={handlePostJob} className="card px-8 pt-8">
+          {status && <div className="mb-6"><Notice tone={status.tone}>{status.text}</Notice></div>}
+          <FormSection title="Author" description="Taken from your account.">
+            <div className="flex items-center gap-3 rounded-ctl border border-line bg-canvas px-4 py-3">
+              <Avatar name={alumniData.alumni_name} size={36} />
+              <div>
+                <div className="text-sm font-medium">{alumniData.alumni_name}</div>
+                <div className="text-xs text-ink-3">{alumniData.alumni_email}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="label" htmlFor="graduation_year">Graduation year</label>
+                <input id="graduation_year" type="number" className="input" placeholder="2019" name="graduation_year" onChange={handleChange} />
+              </div>
+              <div>
+                <label className="label" htmlFor="department_name">Department</label>
+                <input id="department_name" type="text" className="input" placeholder="Computer Science" name="department_name" onChange={handleChange} />
+              </div>
+            </div>
+          </FormSection>
+          <FormSection title="Your story" description="Where you started, what you do now, and what helped along the way. 80–200 words works well.">
+            <div>
+              <label className="label" htmlFor="success_story">Story</label>
+              <textarea id="success_story" className="input" rows={8} placeholder="After graduating I joined…" name="success_story" onChange={handleChange}></textarea>
+              <p className="hint font-mono tnum">{words} WORDS</p>
+            </div>
+          </FormSection>
+          <FormActions note="Published immediately to all portal members.">
+            <Link to="/PostedSuccessStories" className="btn btn-ghost">Cancel</Link>
+            <button type="submit" className="btn btn-primary">Publish story</button>
+          </FormActions>
+        </form>
       </div>
-      <div className="flex flex-col items-center px-20 mt-5 w-full max-md:px-5 max-md:max-w-full">
-        <div className="justify-center items-center px-16 py-4 max-w-full border border-black text-2xl font-medium text-black whitespace-nowrap bg-white rounded-xl shadow-sm w-[500px] max-md:px-5">
-          {alumniData.alumni_name && <span>{alumniData.alumni_name}</span>}
-        </div>
-
-        <div className="flex gap-5 justify-between mt-4 w-full text-xl lowercase whitespace-nowrap max-w-[1035px] text-neutral-500 max-md:flex-wrap max-md:max-w-full">
-          <div className="flex-grow justify-center items-start py-4 pr-16 pl-2.5 bg-white rounded-xl shadow-sm max-md:pr-5 max-md:max-w-full">
-            <label className="block text-lg max-w-full text-blue-600 w-[226px] font-semibold mb-2 uppercase">
-              Graduation year
-            </label>
-            <input
-              type="text"
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
-              placeholder="Enter Graduation year"
-              name="graduation_year"
-              onChange={handleChange}
-            />
-          </div>
-          <div className="flex-grow justify-center px- mt-3 py-1 items-start pr-16 pl-2.5 bg-white rounded-xl shadow-sm max-md:pr-5 max-md:max-w-full">
-            <label className="block text-lg max-w-full text-blue-600 w-[226px] font-semibold mb-2 uppercase">
-              DEPARTMENT
-            </label>
-            <input
-              type="text"
-              className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500"
-              placeholder="Enter Department"
-              name="department_name"
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-        <div className="flex-grow justify-center w-1/2 h-1/2 px- mt-3 py-1  items-start pr-16 pl-2.5 bg-white rounded-xl shadow-sm max-md:pr-5 max-md:max-w-full">
-          <label className="block text-lg max-w-full text-blue-600 font-semibold mb-2 uppercase">
-            Enter Success Story
-          </label>
-          <textarea
-            className="w-full h-44  px-4 py-6 rounded-md border border-gray-300 focus:outline-none focus:border-blue-500 resize-none"
-            placeholder="Enter Success Stories"
-            name="success_story"
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        <div
-          onClick={handlePostJob}
-          className="mx-auto justify-center items-center mb-5 px-16 py-4 mt-12 text-2xl text-white bg-[linear-gradient(127deg,#0D6EE1_1.95%,#00065B_97.06%)] rounded-[50px] max-w-[300px] max-md:px-5 max-md:mt-10 cursor-pointer"
-        >
-          Post
-        </div>
-      </div>
-      <Footer />
-    </div>
+    </AppShell>
   );
 }

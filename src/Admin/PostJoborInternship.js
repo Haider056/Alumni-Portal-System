@@ -1,210 +1,117 @@
-import React, { useState } from "react";
-import AdminHeader from "./AdminHeader";
-import Footer from "../Components/Footer";
-import Job1 from "../Components/Assets/UpcomingEvents.png";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { AppShell, PageHeader, FormSection, FormActions, Notice, getRole } from '../Components/ui';
+
+const JOB_TYPES = [
+  ['Full time', 'Full-time'],
+  ['Part Time', 'Part-time'],
+  ['internship', 'Internship'],
+  ['Project Base', 'Project-based'],
+];
+
 export default function PostJoborInternship() {
-    const [jobTitle, setJobTitle] = useState("");
-    const [jobDescription, setJobDescription] = useState("");
-    const [jobResponsibilities, setJobResponsibilities] = useState("");
-    const [jobRequirements, setJobRequirements] = useState("");
-    const [jobQualifications, setJobQualifications] = useState("");
-    const [jobType, setJobType] = useState("");
-    const [jobLocations, setJobLocations] = useState("");
-    const [jobSalary, setJobSalary] = useState("");
- 
+  const [jobTitle, setJobTitle] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const [jobResponsibilities, setJobResponsibilities] = useState('');
+  const [jobRequirements, setJobRequirements] = useState('');
+  const [jobQualifications, setJobQualifications] = useState('');
+  const [jobType, setJobType] = useState('');
+  const [jobLocations, setJobLocations] = useState('');
+  const [jobSalary, setJobSalary] = useState('');
+  const [status, setStatus] = useState(null);
+  const role = getRole();
 
-    const handlePostJob = async () => {
-      
-        const name = localStorage.getItem('name');
-        const email = localStorage.getItem('email');
-    
-    
-     
-    
-        try {
-            const response = await fetch(
-                "http://localhost:3001/auth/createJobOrInternship",
-                {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        jobTitle,
-                        jobDescription,
-                        jobResponsibilities,
-                        jobRequirements,
-                        jobQualifications,
-                        jobType,
-                        jobLocations,
-                        jobSalary,
-                        postedBy: name,
-                        postedByEmail: email,
-                    }),
-                }
-            );
-        
-            if (response.ok) {
-                const responseData = await response.json();
-                alert(responseData.message);
-            }
-            
-        }
-         
-        catch (error) {
-            console.error("Error posting job or internship:", error);
-            alert("Error posting job or internship. Please try again later.");
+  const handlePostJob = async (e) => {
+    if (e) e.preventDefault();
+    const name = localStorage.getItem('name');
+    const email = localStorage.getItem('email');
+    try {
+      const response = await fetch('http://localhost:3001/auth/createJobOrInternship', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobTitle,
+          jobDescription,
+          jobResponsibilities,
+          jobRequirements,
+          jobQualifications,
+          jobType,
+          jobLocations,
+          jobSalary,
+          postedBy: name,
+          postedByEmail: email,
+        }),
+      });
+      const responseData = await response.json().catch(() => ({}));
+      if (response.ok) setStatus({ tone: 'success', text: responseData.message || 'Job posted.' });
+      else setStatus({ tone: 'danger', text: responseData.message || 'Could not post the job.' });
+    } catch (error) {
+      console.error('Error posting job or internship:', error);
+      setStatus({ tone: 'danger', text: 'Error posting job or internship. Please try again later.' });
+    }
+  };
 
-        }
-    };
-    
+  const area = (id, label, value, set, placeholder, rows = 4) => (
+    <div>
+      <label htmlFor={id} className="label">{label}</label>
+      <textarea id={id} rows={rows} value={value} onChange={(e) => set(e.target.value)} className="input" placeholder={placeholder} />
+    </div>
+  );
 
-    return (
-        <div className="flex flex-col bg-white">
-            <AdminHeader />
-            <div className="relative overflow-hidden flex items-center justify-center pt-24 pr-16 pb-20 pl-20 w-full text-6xl font-semibold text-white min-h-[250px] max-md:px-5 max-md:pt-10 max-md:max-w-full max-md:text-4xl">
-                <img
-                    loading="lazy"
-                    src={Job1}
-                    className="object-cover absolute inset-0 w-full h-full"
-                    alt="Events1"
-                />
-                <div className="relative z-10">Post Job Or Internship</div>
+  return (
+    <AppShell role={role}>
+      <PageHeader
+        eyebrow={role === 'admin' ? 'Careers office' : 'Alumni'}
+        title="Post a job or internship"
+        description="Share an opening with IST students and graduates. Applicants apply with their portal portfolio."
+        actions={role === 'alumni' && <Link to="/PastJoborInternship" className="btn btn-secondary">My postings</Link>}
+      />
+      <div className="page py-8">
+        <form onSubmit={handlePostJob} className="card px-8 pt-8">
+          {status && <div className="mb-6"><Notice tone={status.tone}>{status.text}</Notice></div>}
+
+          <FormSection title="Role" description="The title and summary shown on the jobs board.">
+            <div>
+              <label htmlFor="jobTitle" className="label">Job title</label>
+              <input id="jobTitle" type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="input" placeholder="e.g. Junior Backend Engineer" />
             </div>
-            <div className="flex flex-col self-center px-5 mt-8 max-w-full w-[709px]">
-                <label htmlFor="jobTitle" className="text-xl font-medium text-black">
-                    Job Title:
-                </label>
-                <input
-                    type="text"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
-                    className="text-2xl font-medium text-black capitalize max-md:max-w-full border border-black px-2 py-1"
-                />
-                <label htmlFor="jobDescription" className="text-xl font-medium text-black">
-                    Job Description:
-                </label>
-                <textarea
-                    id="jobDescription"
-                    value={jobDescription}
-                    onChange={(e) => setJobDescription(e.target.value)}
-                    className="text-2xl font-medium text-black capitalize max-md:max-w-full border border-black px-4 py-2 h-48"
-                    placeholder="Enter Job Description"
-                />
-
-                <label htmlFor="jobResponsibilities" className="text-xl font-medium text-black">
-                    Job Responsibilities:
-                </label>
-                <textarea
-                    id="jobResponsibilities"
-                    value={jobResponsibilities}
-                    onChange={(e) => setJobResponsibilities(e.target.value)}
-                    className="text-2xl font-medium text-black capitalize max-md:max-w-full border border-black px-4 py-2 h-48"
-                    placeholder="Enter Job Responsibilities"
-                />
-
-                <label htmlFor="jobRequirements" className="text-xl font-medium text-black">
-                    Job Requirements:
-                </label>
-                <textarea
-                    id="jobRequirements"
-                    value={jobRequirements}
-                    onChange={(e) => setJobRequirements(e.target.value)}
-                    className="text-2xl font-medium text-black capitalize max-md:max-w-full border border-black px-4 py-2 h-48"
-                    placeholder="Enter Job Requirements"
-                />
-
-                <label htmlFor="jobQualifications" className="text-xl font-medium text-black">
-                    Job Qualifications:
-                </label>
-                <textarea
-                    id="jobQualifications"
-                    value={jobQualifications}
-                    onChange={(e) => setJobQualifications(e.target.value)}
-                    className="text-2xl font-medium text-black capitalize max-md:max-w-full border border-black px-4 py-2 h-48"
-                    placeholder="Enter Job Qualifications"
-                />
-
-                <div className="flex gap-5 justify-between mt-5 font-medium capitalize max-md:flex-wrap max-md:max-w-full">
-                    <div className="flex-auto self-start mt-2.5 text-3xl">Job Type</div>
-                    <div className="flex gap-3">
-                        <div
-                            onClick={() => setJobType("Project Base")}
-                            className={`py-3.5 px-5 mt-3 whitespace-nowrap rounded-xl shadow-sm cursor-pointer ${
-                                jobType === "Project Base"
-                                    ? "bg-[linear-gradient(127deg,#0D6EE1_1.95%,#00065B_97.06%)] text-white"
-                                    : "bg-white text-black"
-                            }`}
-                        >
-                            Project Base
-                        </div>
-                        <div
-                            onClick={() => setJobType("Full time")}
-                            className={`py-3.5 px-5 mt-3 whitespace-nowrap rounded-xl shadow-sm cursor-pointer ${
-                                jobType === "Full time"
-                                    ? "bg-[linear-gradient(127deg,#0D6EE1_1.95%,#00065B_97.06%)] text-white"
-                                    : "bg-white text-black"
-                            }`}
-                        >
-                            Full time
-                        </div>
-                        <div
-                            onClick={() => setJobType("Part Time")}
-                            className={`py-3.5 px-5 mt-3 whitespace-nowrap rounded-xl shadow-sm cursor-pointer ${
-                                jobType === "Part Time"
-                                    ? "bg-[linear-gradient(127deg,#0D6EE1_1.95%,#00065B_97.06%)] text-white"
-                                    : "bg-white text-black"
-                            }`}
-                        >
-                            Part Time
-                        </div>
-                        <div
-                            onClick={() => setJobType("internship")}
-                            className={`py-3.5 px-5 mt-3 whitespace-nowrap rounded-xl shadow-sm cursor-pointer ${
-                                jobType === "internship"
-                                    ? "bg-[linear-gradient(127deg,#0D6EE1_1.95%,#00065B_97.06%)] text-white"
-                                    : "bg-white text-black"
-                            }`}
-                        >
-                            internship
-                        </div>
-                    </div>
-                </div>
-
-                <label htmlFor="jobLocations" className="text-xl font-medium text-black">
-                    Job Locations:
-                </label>
-                <input
-                    type="text"
-                    value={jobLocations}
-                    onChange={(e) => setJobLocations(e.target.value)}
-                    className="text-2xl font-medium text-black capitalize max-md:max-w-full border border-black px-2 py-1"
-                    placeholder="Enter Job Locations"
-                />
-
-                <label htmlFor="jobSalary" className="text-xl font-medium text-black">
-                    Job Salary:
-                </label>
-                <input
-                    type="text"
-                    value={jobSalary}
-                    onChange={(e) => setJobSalary(e.target.value)}
-                    className="text-2xl font-medium text-black capitalize max-md:max-w-full border border-black px-2 py-1"
-                    placeholder="Enter Job Salary"
-                />
-
-                <div
-                    onClick={handlePostJob}
-                    className="mx-auto justify-center items-center px-16 py-4 mt-12 text-2xl text-white bg-[linear-gradient(127deg,#0D6EE1_1.95%,#00065B_97.06%)] rounded-[50px] max-w-[300px] max-md:px-5 max-md:mt-10 cursor-pointer"
-                >
-                    Post
-                </div>
+            <div>
+              <span className="label">Type</span>
+              <div className="segmented">
+                {JOB_TYPES.map(([value, label]) => (
+                  <button key={value} type="button" aria-pressed={jobType === value} onClick={() => setJobType(value)}>{label}</button>
+                ))}
+              </div>
             </div>
-            <div className="self-center mt-12 text-3xl font-medium text-red-500 max-md:mt-10 max-md:max-w-full">
-                This Job Ad will expire in 30 days
+            {area('jobDescription', 'Description', jobDescription, setJobDescription, 'Company, team and what the role is about.', 3)}
+          </FormSection>
+
+          <FormSection title="Details" description="Be specific — candidates filter on these.">
+            {area('jobResponsibilities', 'Responsibilities', jobResponsibilities, setJobResponsibilities, 'What the person will do day to day.')}
+            {area('jobRequirements', 'Requirements', jobRequirements, setJobRequirements, 'Skills and experience needed.')}
+            {area('jobQualifications', 'Qualifications', jobQualifications, setJobQualifications, 'Degree or certifications.', 2)}
+          </FormSection>
+
+          <FormSection title="Location & pay">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="jobLocations" className="label">Location</label>
+                <input id="jobLocations" type="text" value={jobLocations} onChange={(e) => setJobLocations(e.target.value)} className="input" placeholder="Islamabad (Hybrid)" />
+              </div>
+              <div>
+                <label htmlFor="jobSalary" className="label">Salary</label>
+                <input id="jobSalary" type="text" value={jobSalary} onChange={(e) => setJobSalary(e.target.value)} className="input" placeholder="PKR 150,000 / month" />
+              </div>
             </div>
-            <Footer />
-        </div>
-    );
+          </FormSection>
+
+          <FormActions note="This listing will expire in 30 days.">
+            <Link to={role === 'alumni' ? '/PastJoborInternship' : '/jobPage'} className="btn btn-ghost">Cancel</Link>
+            <button type="submit" className="btn btn-primary">Publish job</button>
+          </FormActions>
+        </form>
+      </div>
+    </AppShell>
+  );
 }

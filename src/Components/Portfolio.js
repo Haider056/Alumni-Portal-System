@@ -1,135 +1,149 @@
 import React, { useEffect, useState } from 'react';
-import Header from './Header';
-import Footer from './Footer';
-import Background from './Assets/background.png';
 import { useNavigate } from 'react-router-dom';
-import AlumniHeader from "../Alumni/AlumniHeader";
-import AdminHeader from "../Admin/AdminHeader";
+import { FiMail, FiPhone, FiMapPin, FiEdit2 } from 'react-icons/fi';
+import { AppShell, PageHeader, Avatar, EmptyState, Loading, formatDate } from './ui';
+
+function Block({ title, children }) {
+  return (
+    <section className="card p-6">
+      <h2 className="eyebrow mb-4">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function Contact({ icon, children }) {
+  if (!children) return null;
+  return (
+    <div className="flex items-center gap-2.5 text-sm text-ink-2 py-1.5">
+      <span className="text-ink-3">{icon}</span>
+      <span className="truncate">{children}</span>
+    </div>
+  );
+}
+
 export default function Portfolio() {
-    const navigate = useNavigate();
-    const [portfolio, setPortfolio] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [userRole, setUserRole] = useState('');
-    useEffect(() => {
-        const storedRole = localStorage.getItem('role');
-        if (storedRole) {
-          const parsedRole = JSON.parse(storedRole);
-          setUserRole(parsedRole.role);
-        }
-      }, []);
-    useEffect(() => {
-        const fetchPortfolio = async () => {
-            const userEmail = localStorage.getItem('email');
-            try {
-            
-                const response = await fetch(`http://localhost:3001/auth/portfolio/${userEmail}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`, 
-                        'Content-Type': 'application/json' 
-                    },
-                    credentials: 'include' 
-                });
-                const data = await response.json();
-                setPortfolio(data.portfolio);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching portfolio:', error);
-                setLoading(false);
-            }
-        };
-    
-        fetchPortfolio();
-    }, []);
+  const navigate = useNavigate();
+  const [portfolio, setPortfolio] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState('');
 
-    const handleClick = () => {
-        navigate('/CreatePortfolio');
+  useEffect(() => {
+    const storedRole = localStorage.getItem('role');
+    if (storedRole) {
+      const parsedRole = JSON.parse(storedRole);
+      setUserRole(parsedRole.role);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      const userEmail = localStorage.getItem('email');
+      try {
+        const response = await fetch(`http://localhost:3001/auth/portfolio/${userEmail}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setPortfolio(data.portfolio);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching portfolio:', error);
+        setLoading(false);
+      }
     };
+    fetchPortfolio();
+  }, []);
 
-    return (
-        <div>
-              {userRole === 'alumni' ? (
-        <AlumniHeader />
-      ) : userRole === 'student' ? (
-        <Header />
-      ) : userRole === 'admin' ? (
-        <AdminHeader />
-      ) : null}
-            <div id="NewRootRoot" className="flex flex-col md:flex-row w-full">
-                <div id="Portfolio1" className="bg-white flex flex-col gap-12 w-full p-4 md:p-10">
-                    <div id="FI" className="relative text-white font-semibold uppercase text-center py-16 md:py-24 bg-cover bg-center bg-no-repeat"
-                        style={{
-                            backgroundImage: `url(${Background}), linear-gradient(to right, rgba(13, 110, 225, 0.8), rgba(13, 110, 225, 0.8))`
-                        }}>
-                        <h1 className="text-3xl md:text-5xl">Portfolio</h1>
-                    </div>
-                    {!loading && !portfolio && (
-                        <div className="px-4 md:px-10 text-center">
-                            <p className="text-lg">Portfolio does not exist.</p>
-                            <button className="bg-[#0d6ee1] text-white py-2 px-4 rounded-full text-lg md:text-xl font-medium tracking-wide" onClick={handleClick}>Create Portfolio</button>
-                        </div>
-                    )}
-                    {portfolio && (
-                        <div className="px-4 md:px-10">
-                            <div className="flex flex-col md:flex-row md:justify-between gap-6">
-                                <div>
-                                    <h2 className="text-3xl md:text-5xl font-medium text-[#094bb4]">{portfolio.name}</h2>
-                                    <h3 className="text-xl md:text-2xl font-medium">{portfolio.profession}</h3>
-                                </div>
-                                <div>
-                                    <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-                                        <div className="flex flex-col">
-                                            <span className="text-lg md:text-xl text-[#767676]">Email:</span>
-                                            <span className="text-base md:text-lg">{portfolio.email}</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-lg md:text-xl text-[#767676]">Number:</span>
-                                            <span className="text-base md:text-lg">{portfolio.number}</span>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4">
-                                        <span className="text-lg md:text-xl text-[#767676]">Address:</span>
-                                        <div className="text-base md:text-lg">{portfolio.address}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="mt-4 md:mt-8">
-                                <h4 className="text-xl md:text-2xl text-[#767676] font-medium">About Me</h4>
-                                <p className="text-sm md:text-base">
-                                    {portfolio.about}
-                                </p>
-                            </div>
-                            <div className="mt-4 md:mt-8">
-                                <h4 className="text-xl md:text-2xl text-[#767676] font-medium">Education</h4>
-                                <p className="text-sm md:text-base">
-                                    {portfolio.education}
-                                </p>
-                            </div>
-                            <div className="mt-4 md:mt-8">
-                                <h4 className="text-xl md:text-2xl text-[#767676] font-medium">Work Experience</h4>
-                                <p className="text-sm md:text-base">
-                                    <strong>Company Name:</strong> {portfolio.companyName}<br />
-                                    <strong>Designation:</strong> {portfolio.designation}<br />
-                                    <strong>Start Date:</strong> {new Date(portfolio.startDate).toLocaleDateString()}<br />
-                                    <strong>End Date:</strong> {new Date(portfolio.endDate).toLocaleDateString()}<br />
-                                    <strong>Experience Description:</strong> {portfolio.experienceDescription}
-                                </p>
-                            </div>
+  const handleClick = () => navigate('/CreatePortfolio');
 
-                            <div className="mt-4 md:mt-8">
-                                <h4 className="text-xl md:text-2xl text-[#767676] font-medium">Skills</h4>
-                                <ul className="list-none space-y-1 text-sm md:text-base">
-                                    <li>{portfolio.skills}</li>
-                                </ul>
-                            </div>
-                            <div className="flex justify-center my-6">
-                                <button className="bg-[#0d6ee1] text-white py-2 px-4 rounded-full text-lg md:text-xl font-medium tracking-wide" onClick={handleClick}>Edit</button>
-                            </div>
-                        </div>
-                    )}
+  if (loading) return <AppShell role={userRole}><Loading /></AppShell>;
+
+  const skills = portfolio && portfolio.skills ? String(portfolio.skills).split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const dateRange = portfolio
+    ? [portfolio.startDate, portfolio.endDate].map((d) => formatDate(d, { month: 'short', year: 'numeric' })).filter(Boolean).join(' – ')
+    : '';
+
+  return (
+    <AppShell role={userRole}>
+      <PageHeader
+        eyebrow="Profile"
+        title="Portfolio"
+        description="This is what recruiters and alumni see when you apply for a role."
+        actions={portfolio && <button type="button" className="btn btn-secondary" onClick={handleClick}><FiEdit2 /> Edit portfolio</button>}
+      />
+      <div className="page py-8">
+        {!portfolio && (
+          <EmptyState
+            title="You have not created a portfolio yet"
+            description="A portfolio is required to apply for jobs and internships on the portal."
+            action={<button type="button" className="btn btn-primary" onClick={handleClick}>Create portfolio</button>}
+          />
+        )}
+
+        {portfolio && (
+          <div className="grid grid-cols-12 gap-6">
+            <aside className="col-span-4">
+              <div className="card p-6 sticky top-24">
+                <Avatar name={portfolio.name} size={72} tone="dark" />
+                <h2 className="text-lg mt-4">{portfolio.name}</h2>
+                <div className="text-base text-ink-3">{portfolio.profession}</div>
+                {portfolio.companyName && (
+                  <div className="text-sm text-ink-2 mt-1">
+                    {portfolio.designation && portfolio.designation !== portfolio.profession ? `${portfolio.designation} at ` : 'at '}
+                    {portfolio.companyName}
+                  </div>
+                )}
+                <div className="mt-5 pt-4 border-t border-line">
+                  <Contact icon={<FiMail />}>{portfolio.email}</Contact>
+                  <Contact icon={<FiPhone />}>{portfolio.number}</Contact>
+                  <Contact icon={<FiMapPin />}>{portfolio.address}</Contact>
                 </div>
+                {portfolio.experience && (
+                  <div className="mt-4 pt-4 border-t border-line flex items-center justify-between">
+                    <span className="text-sm text-ink-3">Experience</span>
+                    <span className="font-mono text-sm">{portfolio.experience}</span>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            <div className="col-span-8 space-y-6">
+              <Block title="About">
+                <p className="text-base text-ink-2 leading-7">{portfolio.about}</p>
+              </Block>
+
+              <Block title="Experience">
+                <div className="flex gap-4">
+                  <Avatar name={portfolio.companyName} size={40} square />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <div className="text-base font-semibold">{portfolio.designation}</div>
+                      <div className="font-mono text-xs text-ink-3 whitespace-nowrap">{dateRange}</div>
+                    </div>
+                    <div className="text-sm text-ink-3">{portfolio.companyName}</div>
+                    <p className="text-sm text-ink-2 leading-6 mt-2">{portfolio.experienceDescription}</p>
+                  </div>
+                </div>
+              </Block>
+
+              <Block title="Education">
+                <p className="text-base text-ink-2">{portfolio.education}</p>
+              </Block>
+
+              <Block title="Skills">
+                <div className="flex flex-wrap gap-2">
+                  {skills.map((s) => <span key={s} className="badge badge-neutral h-7 px-2.5 text-sm">{s}</span>)}
+                </div>
+              </Block>
             </div>
-            <Footer />
-        </div>
-    );
+          </div>
+        )}
+      </div>
+    </AppShell>
+  );
 }

@@ -5,21 +5,20 @@ class EventModel {
     try {
       const { title, description, date, timing, locations, imageURL, createdBy } = eventData;
 
-      const eventTiming = new Date(timing);
-      
-      if (!(eventTiming instanceof Date && !isNaN(eventTiming))) {
-        console.error('Timing value is not a valid Date object');
-      } else {
-        const eventTimingFormatted = eventTiming.toISOString().slice(0, 19).replace('T', ' ');
+      // Timing is displayed as-is ("06:00 PM"). Older clients sent a full Date string; that used to be
+      // converted to a UTC timestamp, and anything else was silently dropped while the API still returned 201.
+      const parsed = new Date(timing);
+      const eventTimingFormatted = /GMT|T\d{2}:/.test(String(timing)) && !isNaN(parsed)
+        ? parsed.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        : String(timing || '').trim();
 
-        const query = `
-          INSERT INTO events (eventTitle, eventDescription, eventDate, eventTiming, eventLocations, imageURL, createdBy)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `;
-        const values = [title, description, date, eventTimingFormatted, locations, imageURL, createdBy];
-        const result = await pool.query(query, values);
-        return result.insertId; 
-      }
+      const query = `
+        INSERT INTO events (eventTitle, eventDescription, eventDate, eventTiming, eventLocations, imageURL, createdBy)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+      const values = [title, description, date, eventTimingFormatted, locations, imageURL, createdBy];
+      const [result] = await pool.query(query, values);
+      return result.insertId;
     } catch (error) {
       throw error;
     }

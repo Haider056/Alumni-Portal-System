@@ -28,7 +28,8 @@ class EventsController {
         }
 
         const { title, description, date, timing, locations } = req.body;
-        const imageURL = `/images/${req.file.filename}`; 
+        // Image is optional: without this guard a missing file crashed the handler and the request hung.
+        const imageURL = req.file ? `/images/${req.file.filename}` : null;
 
         const formattedDate = new Date(date).toISOString().split('T')[0];
 

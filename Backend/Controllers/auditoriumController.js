@@ -30,7 +30,11 @@ exports.getAllBookings = async (req, res) => {
     const allBookings = await auditoriumModel.getAllBookings();
     const formattedBookings = allBookings.map(booking => ({
       ...booking,
-      eventDate: new Date(booking.eventDate).toISOString().split('T')[0]
+      // Format in local time: toISOString() shifted DATE values back a day in timezones ahead of UTC.
+      eventDate: (() => {
+        const d = new Date(booking.eventDate);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      })()
     }));
     return res.status(200).json(formattedBookings);
   } catch (err) {

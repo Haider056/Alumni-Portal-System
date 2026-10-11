@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
-import Header from "../Components/Header";
-import Footer from "../Components/Footer";
-import Job1 from "../Components/Assets/UpcomingEvents.png";
-import AlumniHeader from "../Alumni/AlumniHeader";
-import AdminHeader from "../Admin/AdminHeader";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FiPlus } from 'react-icons/fi';
+import { AppShell, PageHeader, Avatar, EmptyState, formatDate } from '../Components/ui';
+
 export default function SuccessStories() {
   const [successStories, setSuccessStories] = useState([]);
   const [userRole, setUserRole] = useState('');
+  const [dept, setDept] = useState('All');
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
     const storedRole = localStorage.getItem('role');
     if (storedRole) {
@@ -14,6 +16,7 @@ export default function SuccessStories() {
       setUserRole(parsedRole.role);
     }
   }, []);
+
   useEffect(() => {
     const fetchSuccessStories = async () => {
       try {
@@ -26,53 +29,57 @@ export default function SuccessStories() {
           credentials: 'include'
         });
         const data = await response.json();
-        setSuccessStories(data.successStories);
+        setSuccessStories(data.successStories || []);
       } catch (error) {
         console.error('Error fetching Success Story:', error);
+      } finally {
+        setLoaded(true);
       }
     };
-
     fetchSuccessStories();
   }, []);
 
-
+  const departments = ['All', ...Array.from(new Set(successStories.map((s) => s.department_name).filter(Boolean)))];
+  const visible = successStories.filter((s) => dept === 'All' || s.department_name === dept);
 
   return (
-    <div className="flex flex-col bg-white">
-           {userRole === 'alumni' ? (
-        <AlumniHeader />
-      ) : userRole === 'student' ? (
-        <Header />
-      ) : userRole === 'admin' ? (
-        <AdminHeader />
-      ) : null}
-      <div className="relative overflow-hidden w-full min-h-[250px] max-md:px-5 max-md:pt-10 max-md:max-w-full max-md:text-4xl">
-        <img
-          loading="lazy"
-          src={Job1}
-          className="object-cover w-full h-full"
-          alt="Events1"
-        />
-        <div className="absolute inset-0 flex items-center justify-center text-6xl font-semibold text-white z-10">Success Stories</div>
-      </div>
-      <div className="self-center px-5 mt-7 w-full max-w-[1307px] max-md:max-w-full">
-    {successStories && successStories.length > 0 && (
-        <div className="max-md:flex-col max-md:gap-0 max-md:">
-
-            {successStories.map((story, index) => (
-                <div key={index} className="flex flex-col w-full max-md:ml-0">
-                    <div className="flex flex-col border mt-5 mb-5 border-gray-500 grow px-4 pt-9 pb-5 mx-auto w-full text-xl bg-white rounded-2xl shadow-sm max-md:mt-6">
-                        <div className="text-3xl font-medium text-black">{story.alumni_name}</div>
-                        <div className="mt-2 text-xl text-black">{story.department_name}, Class of {story.graduation_year}</div>
-                        <div className="mt-6 text-2xl text-black">{story.success_story}</div>
-                        <div className="mt-5 text-sm text-gray-500">{new Date(story.created_at).toLocaleDateString()}</div>
-                    </div>
-                </div>
-            ))}
+    <AppShell role={userRole}>
+      <PageHeader
+        eyebrow="Community"
+        title="Success stories"
+        description="Career journeys shared by IST graduates — from first jobs to founding companies."
+        actions={userRole === 'alumni' && (
+          <Link to="/PostAlumniSuccessStories" className="btn btn-primary"><FiPlus className="text-[15px]" /> Share your story</Link>
+        )}
+      />
+      <div className="page py-8">
+        <div className="segmented mb-6">
+          {departments.map((d) => (
+            <button key={d} type="button" aria-pressed={dept === d} onClick={() => setDept(d)}>{d}</button>
+          ))}
         </div>
-    )}
-</div>
-      <Footer />
-    </div>
+
+        {loaded && visible.length === 0 && <EmptyState title="No stories yet" description="Stories shared by alumni will appear here." />}
+
+        <div className="grid grid-cols-2 gap-6">
+          {visible.map((story, index) => (
+            <article key={story.id || index} className="card p-6 flex flex-col">
+              <div className="flex items-center gap-3">
+                <Avatar name={story.alumni_name} size={44} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-base font-semibold">{story.alumni_name}</div>
+                  <div className="text-sm text-ink-3">{story.department_name}</div>
+                </div>
+                <span className="badge badge-neutral font-mono">CLASS OF {story.graduation_year}</span>
+              </div>
+              <p className="text-base text-ink-2 leading-7 mt-5 flex-1">{story.success_story}</p>
+              <div className="mt-5 pt-4 border-t border-line font-mono text-2xs text-ink-4 uppercase">
+                Shared {formatDate(story.created_at)}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </AppShell>
   );
 }

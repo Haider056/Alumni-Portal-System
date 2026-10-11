@@ -1,92 +1,83 @@
-import React, { useEffect, useState } from "react";
-import AdminHeader from "./AdminHeader";
-import Footer from "../Components/Footer";
-import Job1 from "../Components/Assets/UpcomingEvents.png";
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { AppShell, PageHeader, CoverImage, EmptyState, formatDate } from '../Components/ui';
 
 const PostedNews = () => {
   const [newsList, setNewsList] = useState([]);
+  const [loaded, setLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/auth/getnews`, {
-          credentials: 'include' 
-        });
+        const response = await fetch(`http://localhost:3001/auth/getnews`, { credentials: 'include' });
         const data = await response.json();
-        if (data && data.news && data.news.length > 0) {
-          setNewsList(data.news);
-          console.log(data.news);
-        } else {
-          console.log("Data is empty or null.");
-        }
+        if (data && data.news && data.news.length > 0) setNewsList(data.news);
       } catch (error) {
-        console.error("Error fetching News:", error);
+        console.error('Error fetching News:', error);
+      } finally {
+        setLoaded(true);
       }
     };
-
     fetchNews();
   }, []);
 
   const handleDelete = async (idToDelete) => {
+    if (!window.confirm('Delete this news post?')) return;
     try {
-      const response = await fetch(`http://localhost:3001/auth/news/${idToDelete}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      if (response.ok) {
-        setNewsList(prevNewsList => prevNewsList.filter(news => news.id !== idToDelete));
-      } else {
-        console.error('Failed to delete news');
-      }
+      const response = await fetch(`http://localhost:3001/auth/news/${idToDelete}`, { method: 'DELETE', credentials: 'include' });
+      if (response.ok) setNewsList((prev) => prev.filter((news) => news.id !== idToDelete));
+      else console.error('Failed to delete news');
     } catch (error) {
       console.error('Error deleting news:', error);
     }
   };
 
-  const handleClick = () => {
-    navigate('/PostNews');
-  };
+  const handleClick = () => navigate('/PostNews');
 
   return (
-    <div className="flex flex-col bg-white">
-      <AdminHeader />
-      <div className="relative overflow-hidden flex items-center justify-center pt-24 pr-16 pb-20 pl-20 w-full text-6xl font-semibold text-white min-h-[250px] max-md:px-5 max-md:pt-10 max-md:max-w-full max-md:text-4xl">
-        <img loading="lazy" src={Job1} className="object-cover absolute inset-0 w-full h-full" alt="Events1" />
-        <div className="relative z-10">Posted News</div>
+    <AppShell role="admin">
+      <PageHeader
+        eyebrow="Admin · News"
+        title="Posted news"
+        description="Everything published to the newsroom. Deleting a post removes it for all members."
+        actions={<button type="button" className="btn btn-primary" onClick={handleClick}><FiPlus className="text-[15px]" /> Post news</button>}
+      />
+      <div className="page py-8">
+        {loaded && newsList.length === 0 && <EmptyState title="No news yet" action={<button type="button" className="btn btn-primary" onClick={handleClick}>Post news</button>} />}
+        {newsList.length > 0 && (
+          <div className="card overflow-hidden">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-line bg-canvas">
+                  {['Article', 'Published', ''].map((h) => <th key={h} className="px-5 h-10 eyebrow font-normal">{h}</th>)}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {newsList.map((news) => (
+                  <tr key={news.id}>
+                    <td className="px-5 py-4">
+                      <Link to={`/newsDescription/${news.id}`} className="flex items-center gap-4 group">
+                        <CoverImage src={news.newsImageURL} alt="" className="w-28 aspect-[12/7] rounded-ctl border border-line shrink-0" />
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium group-hover:text-accent">{news.newsTitle}</div>
+                          <div className="text-sm text-ink-3 clamp-2 max-w-2xl mt-0.5">{news.newsDescription}</div>
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-ink-3 whitespace-nowrap">{formatDate(news.created_at)}</td>
+                    <td className="px-5 py-4 text-right">
+                      <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDelete(news.id)}><FiTrash2 /> Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-      <div className="self-center mt-8 text-4xl font-medium text-black max-md:max-w-full">
-        Past News
-      </div>
-      <div className="self-center px-5 mb-12 mt-7 w-full max-w-[1307px] max-md:max-w-full">
-        <div className="flex gap-5 max-md:flex-col max-md:gap-0">
-          {newsList.map((news, index) => (
-            <div key={index} className="flex flex-col w-[33%] max-md:ml-0 max-md:w-full">
-              <div className="flex flex-col grow px-4 pt-9 pb-5 mx-auto w-full text-xl bg-white rounded-2xl shadow-sm max-md:mt-6">
-                <div className="flex justify-between items-center">
-                  <img src={news.newsImageURL || 'default_image_url'} alt="News Thumbnail" className="w-full h-auto rounded-lg mb-4" />
-                </div>
-                <div className="text-3xl font-medium text-black">{news.newsTitle}</div>
-                <div className="mt-2 text-black">{news.newsDescription.slice(0, 100)}...</div>
-                <button className="text-red-500 font-medium mt-2" onClick={() => handleDelete(news.id)}>
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-center my-6">
-          <button
-            className="bg-[#0d6ee1] text-white py-2 px-4 rounded-full text-lg md:text-xl font-medium tracking-wide"
-            onClick={handleClick}
-          >
-            Post News
-          </button>
-        </div>
-      </div>
-      <Footer />
-    </div>
+    </AppShell>
   );
 };
 

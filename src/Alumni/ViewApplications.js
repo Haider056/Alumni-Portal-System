@@ -1,103 +1,110 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../Components/Header';
-import Footer from '../Components/Footer';
-import Background from '../Components/Assets/background.png';
-import {  useParams } from 'react-router-dom';
-import AlumniHeader from "../Alumni/AlumniHeader";
-import AdminHeader from "../Admin/AdminHeader";
+import { Link, useParams } from 'react-router-dom';
+import { FiArrowLeft, FiMail, FiPhone } from 'react-icons/fi';
+import { AppShell, Avatar, EmptyState, Loading, formatDate } from '../Components/ui';
+
 export default function ViewApplication() {
-    const { id } = useParams();
-    const [applications, setApplications] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [userRole, setUserRole] = useState('');
-    useEffect(() => {
-        const storedRole = localStorage.getItem('role');
-        if (storedRole) {
-          const parsedRole = JSON.parse(storedRole);
-          setUserRole(parsedRole.role);
-        }
-      }, []);
-    useEffect(() => {
-        const fetchApplications = async () => {
-            try {
-                const response = await fetch(`http://localhost:3001/auth/jobApplications/${id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                console.log("Application213",data);
-                if (response.ok) {
-                    setApplications(data.applications);
-                } else {
-                    console.error('Error fetching job applications:', data.message);
-                }
+  const { id } = useParams();
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState('');
+  const [job, setJob] = useState(null);
 
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching job applications:', error);
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    const storedRole = localStorage.getItem('role');
+    if (storedRole) {
+      const parsedRole = JSON.parse(storedRole);
+      setUserRole(parsedRole.role);
+    }
+  }, []);
 
-        fetchApplications();
-    }, [id]);
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/auth/jobApplications/${id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        const data = await response.json();
+        if (response.ok) setApplications(data.applications || []);
+        else console.error('Error fetching job applications:', data.message);
+      } catch (error) {
+        console.error('Error fetching job applications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+    fetch(`http://localhost:3001/auth/JobDescription/${id}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => setJob(d.postJobOrInternship))
+      .catch(() => {});
+  }, [id]);
 
-    return (
-        <div>
-       {userRole === 'alumni' ? (
-        <AlumniHeader />
-      ) : userRole === 'student' ? (
-        <Header />
-      ) : userRole === 'admin' ? (
-        <AdminHeader />
-      ) : null}
-            <div id="NewRootRoot" className="flex flex-col md:flex-row w-full">
-                <div id="Portfolio1" className="bg-white flex flex-col gap-12 w-full p-4 md:p-10">
-                    <div id="FI" className="relative text-white font-semibold uppercase text-center py-16 md:py-24 bg-cover bg-center bg-no-repeat"
-                        style={{
-                            backgroundImage: `url(${Background}), linear-gradient(to right, rgba(13, 110, 225, 0.8), rgba(13, 110, 225, 0.8))`
-                        }}>
-                        <h1 className="text-3xl md:text-5xl">ViewApplication</h1>
-                    </div>
-                    {loading && (
-                        <div className="px-4 md:px-10 text-center">
-                            <p className="text-lg">Loading...</p>
-                        </div>
-                    )}
-                    {!loading && applications.length === 0 && (
-                        <div className="px-4 md:px-10 text-center">
-                            <p className="text-lg">No applications found for this job.</p>
-                        </div>
-                    )}
-                    {!loading && applications.length > 0 && (
-                        <div className="px-4 md:px-10">
-                            {applications.map(application => (
-                                <div key={application.id} className="mt-4 md:mt-8">
-                                    <h4 className="text-xl md:text-2xl text-[#767676] font-medium">Applicant: {application.applicant_name}</h4>
-                                    <p className="text-base md:text-lg">
-                                        <strong>Email:</strong> {application.applicant_email}<br />
-                                        <strong>Name:</strong> {application.name}<br />
-                                        <strong>Application Status:</strong> {application.application_status}<br />
-                                        <strong>Applied At:</strong> {new Date(application.applied_at).toLocaleString()}<br />
-                                        <strong>Profession:</strong> {application.profession}<br />
-                                        <strong>Experience:</strong> {application.experience}<br/>
-                                        <strong>about:</strong> {application.about}<br />
-                                        <strong>Education:</strong> {application.education}<br />
-                                        <strong>Number:</strong> {application.number}<br />
-                                        <strong>Experience:</strong> {application.experience}<br />
-                                        <strong>Skills:</strong> {application.skills}<br />
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-            <Footer />
+  return (
+    <AppShell role={userRole}>
+      <div className="bg-surface border-b border-line">
+        <div className="page pt-6 pb-8">
+          <Link to="/PastJoborInternship" className="inline-flex items-center gap-1.5 text-sm text-ink-3 hover:text-ink">
+            <FiArrowLeft /> My postings
+          </Link>
+          <div className="eyebrow mt-6">Applications · JOB-{String(id).padStart(4, '0')}</div>
+          <h1 className="text-xl mt-1">{job ? job.jobTitle : 'Applications'}</h1>
+          <p className="text-base text-ink-3 mt-1.5">
+            {loading ? 'Loading applicants…' : `${applications.length} ${applications.length === 1 ? 'applicant' : 'applicants'} applied with their portal portfolio.`}
+          </p>
         </div>
-    );
+      </div>
+
+      <div className="page py-8">
+        {loading && <Loading />}
+        {!loading && applications.length === 0 && (
+          <EmptyState title="No applications yet" description="Applicants will appear here as soon as someone applies." />
+        )}
+        <div className="space-y-4">
+          {!loading && applications.map((a) => (
+            <article key={a.application_id || a.id} className="card p-6">
+              <div className="flex items-start gap-4">
+                <Avatar name={a.name || a.applicant_email} size={48} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-md font-semibold">{a.name || a.applicant_email}</h2>
+                    <span className="badge badge-warn">{a.application_status || 'Pending'}</span>
+                  </div>
+                  <div className="text-sm text-ink-3">{a.profession}</div>
+                  <div className="flex items-center gap-5 mt-2 text-sm text-ink-2">
+                    <span className="inline-flex items-center gap-1.5"><FiMail className="text-ink-3" /> {a.applicant_email}</span>
+                    {a.number && <span className="inline-flex items-center gap-1.5"><FiPhone className="text-ink-3" /> {a.number}</span>}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="eyebrow">Applied</div>
+                  <div className="text-sm mt-1">{formatDate(a.applied_at)}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-6 mt-5 pt-5 border-t border-line text-sm">
+                <div>
+                  <div className="eyebrow mb-1.5">Education</div>
+                  <div className="text-ink-2">{a.education}</div>
+                </div>
+                <div>
+                  <div className="eyebrow mb-1.5">Experience</div>
+                  <div className="text-ink-2">{a.designation}{a.companyName && ` · ${a.companyName}`}{a.experience && ` (${a.experience})`}</div>
+                </div>
+                <div>
+                  <div className="eyebrow mb-1.5">Skills</div>
+                  <div className="text-ink-2">{a.skills}</div>
+                </div>
+              </div>
+              {a.about && <p className="text-sm text-ink-2 mt-4 leading-6">{a.about}</p>}
+            </article>
+          ))}
+        </div>
+      </div>
+    </AppShell>
+  );
 }

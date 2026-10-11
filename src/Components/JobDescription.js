@@ -1,156 +1,186 @@
 import React, { useState, useEffect } from 'react';
-import { useParams,useNavigate } from 'react-router-dom';
-import Header from "./Header";
-import Footer from "./Footer";
-import job1 from "./Assets/Job1.png";
-import AlumniHeader from "../Alumni/AlumniHeader";
-import AdminHeader from "../Admin/AdminHeader";
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { FiArrowLeft, FiMapPin, FiCheck, FiX } from 'react-icons/fi';
+import { AppShell, Avatar, JobTypeBadge, Loading, Notice, jobTypeLabel, postedAgo, formatDate } from './ui';
+
+function Section({ title, children }) {
+  if (!children) return null;
+  return (
+    <section className="py-6 border-t border-line first:border-t-0 first:pt-0">
+      <h2 className="text-base font-semibold mb-2">{title}</h2>
+      <p className="text-base text-ink-2 leading-7 whitespace-pre-line">{children}</p>
+    </section>
+  );
+}
+
+function Row({ label, children }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2.5 border-t border-line first:border-t-0">
+      <dt className="text-sm text-ink-3">{label}</dt>
+      <dd className="text-sm text-ink text-right">{children}</dd>
+    </div>
+  );
+}
+
 function Jobdescription() {
-    const navigate = useNavigate(); 
-    const { jobId } = useParams();
-    const [jobDetails, setJobDetails] = useState(null);
-    const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
-    const [userRole, setUserRole] = useState('');
-    useEffect(() => {
-        const storedRole = localStorage.getItem('role');
-        if (storedRole) {
-          const parsedRole = JSON.parse(storedRole);
-          setUserRole(parsedRole.role);
-        }
-      }, []);
-    useEffect(() => {
-        const fetchJobDetails = async () => {
-            try {
-                const response = await fetch(`http://localhost:3001/auth/JobDescription/${jobId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
-                });
-                const data = await response.json();
-                setJobDetails(data.postJobOrInternship); 
-            } catch (error) {
-                console.error('Error fetching job details:', error);
-            }
-        };
+  const navigate = useNavigate();
+  const { jobId } = useParams();
+  const [jobDetails, setJobDetails] = useState(null);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [userRole, setUserRole] = useState('');
+  const [applyState, setApplyState] = useState({ status: 'idle', message: '' });
 
-        fetchJobDetails();
-    }, [jobId]);
+  useEffect(() => {
+    const storedRole = localStorage.getItem('role');
+    if (storedRole) {
+      const parsedRole = JSON.parse(storedRole);
+      setUserRole(parsedRole.role);
+    }
+  }, []);
 
-    const handleApply = () => {
-        setIsApplyModalOpen(true);
+  useEffect(() => {
+    const fetchJobDetails = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/auth/JobDescription/${jobId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setJobDetails(data.postJobOrInternship);
+      } catch (error) {
+        console.error('Error fetching job details:', error);
+      }
     };
+    fetchJobDetails();
+  }, [jobId]);
 
-    const handleCloseApplyModal = () => {
-        setIsApplyModalOpen(false);
-    };
-    const handleViewPortofolio = () => {
-        navigate('/Portfolio')
-    };
-    const handleApplyWithPortfolio = async () => {
-        try {
-          
-            const userEmail = localStorage.getItem('email');
-           
-            
-            const response = await fetch('http://localhost:3001/auth/applyJob', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    jobId: jobId,
-                    applicantEmail: userEmail
-                })
-            });
+  const handleApply = () => {
+    setApplyState({ status: 'idle', message: '' });
+    setIsApplyModalOpen(true);
+  };
+  const handleCloseApplyModal = () => setIsApplyModalOpen(false);
+  const handleViewPortofolio = () => navigate('/Portfolio');
 
-            if (response.ok) {
-                const responseData = await response.json();
-                alert(JSON.stringify(responseData.message));
+  const handleApplyWithPortfolio = async () => {
+    setApplyState({ status: 'sending', message: '' });
+    try {
+      const userEmail = localStorage.getItem('email');
+      const response = await fetch('http://localhost:3001/auth/applyJob', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ jobId: jobId, applicantEmail: userEmail })
+      });
+      const responseData = await response.json().catch(() => ({}));
+      if (response.ok) {
+        setApplyState({ status: 'done', message: responseData.message || 'Application submitted.' });
+      } else {
+        console.error('Job application failed:', response.statusText);
+        setApplyState({ status: 'error', message: 'Could not submit your application. Create your portfolio first, then try again.' });
+      }
+    } catch (error) {
+      console.error('Error applying for the job:', error);
+      setApplyState({ status: 'error', message: 'Could not reach the server. Please try again.' });
+    }
+  };
 
-            } else {
-             
-                console.error('Job application failed:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error applying for the job:', error);
-        } finally {
-          
-            handleCloseApplyModal();
-        }
-    };
+  if (!jobDetails) return <AppShell role={userRole}><Loading /></AppShell>;
 
-    return (
-        <div className="flex flex-col bg-white">
-               {userRole === 'alumni' ? (
-        <AlumniHeader />
-      ) : userRole === 'student' ? (
-        <Header />
-      ) : userRole === 'admin' ? (
-        <AdminHeader />
-      ) : null}
-           
-<div className="flex justify-center items-center self-center px-16 py-12 mt-5 w-full bg-blue-600 max-w-[1300px] rounded-[100px] max-md:px-5 max-md:max-w-full">
-                <img
-                    loading="lazy"
-                    src={job1}
-                    alt="job1"
-                    className="mt-36 mb-24 max-w-full aspect-[2.27] w-[856px] max-md:my-10"
-                />
+  return (
+    <AppShell role={userRole}>
+      <div className="bg-surface border-b border-line">
+        <div className="page pt-6 pb-8">
+          <Link to="/jobPage" className="inline-flex items-center gap-1.5 text-sm text-ink-3 hover:text-ink">
+            <FiArrowLeft /> All jobs
+          </Link>
+          <div className="mt-6 flex items-start gap-5">
+            <Avatar name={jobDetails.jobTitle} size={56} square />
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl">{jobDetails.jobTitle}</h1>
+              <div className="mt-2 flex items-center gap-2 text-sm text-ink-3">
+                <JobTypeBadge type={jobDetails.jobType} />
+                <span className="badge badge-neutral"><FiMapPin /> {jobDetails.jobLocations}</span>
+                <span className="ml-1">Posted by {jobDetails.postedBy}{jobDetails.created_at && <> · {postedAgo(jobDetails.created_at)}</>}</span>
+              </div>
             </div>
-            {jobDetails && (
-                <div className="self-center w-1/2 mt-7 text-2xl font-medium text-black max-md:max-w-full">
-                    <div className="font-semibold">{jobDetails.jobTitle}</div>
-                    <br />
-                    <br />
-                    <span className="font-semibold">Responsibilities:</span>{" "}
-                    {jobDetails.jobResponsibilities}
-                    <br />
-                    <br />
-                    <span className="font-semibold">Requirements:</span>{" "} {jobDetails.jobRequirements}
-                    <br />
-                    <br />
-                    <span className="font-semibold">Qualifications:</span>{" "} {jobDetails.jobQualifications}
-                    <br />
-                    <br />
-                    <span className="font-semibold">Type: </span>{" "}{jobDetails.jobType}
-                    <br />
-                    <br />
-                    <span className="font-semibold">Locations: </span>{" "}{jobDetails.jobLocations}
-                    <br />
-                    <br />
-                    <span className="font-semibold">Salary: </span>{" "}{jobDetails.jobSalary}
-                </div>
-
-
-            )}
-
-
-            <div className="justify-center items-center self-center px-16 py-6 mt-5 max-w-full rounded-[50px]  max-md:px-5" style={{ backgroundColor: 'blue', color: 'white', marginBottom: "40px" }} onClick={handleApply}>
-                Apply Now
-            </div>
-
-            {isApplyModalOpen && (
-                <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-4 rounded-md">
-                        <h2 className="text-2xl font-semibold mb-4">Apply for the Job</h2>
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2" onClick={handleApplyWithPortfolio}>Apply with Portfolio</button>
-                        <button className="bg-blue-500 text-white px-7 py-2 rounded-md" onClick={handleViewPortofolio}>View Portfolio</button>
-                        <button className="bg-gray-500 text-white px-7 ml-3 py-2 rounded-md" onClick={handleCloseApplyModal}>Cancel</button>
-                    </div>
-                </div>
-            )}
-
-            <Footer />
+            <button id="apply-now" type="button" className="btn btn-primary btn-lg" onClick={handleApply}>Apply now</button>
+          </div>
         </div>
-    );
+      </div>
+
+      <div className="page py-10 grid grid-cols-12 gap-10">
+        <article className="col-span-8">
+          <Section title="About the role">{jobDetails.jobDescription}</Section>
+          <Section title="Responsibilities">{jobDetails.jobResponsibilities}</Section>
+          <Section title="Requirements">{jobDetails.jobRequirements}</Section>
+          <Section title="Qualifications">{jobDetails.jobQualifications}</Section>
+        </article>
+
+        <aside className="col-span-4">
+          <div className="card p-5 sticky top-24">
+            <div className="eyebrow">Compensation</div>
+            <div className="text-lg font-semibold mt-1.5 tnum">{jobDetails.jobSalary}</div>
+            <dl className="mt-4">
+              <Row label="Type">{jobTypeLabel(jobDetails.jobType)}</Row>
+              <Row label="Location">{jobDetails.jobLocations}</Row>
+              <Row label="Posted by">{jobDetails.postedBy}</Row>
+              {jobDetails.created_at && <Row label="Posted on">{formatDate(jobDetails.created_at)}</Row>}
+              <Row label="Reference"><span className="font-mono text-xs">JOB-{String(jobDetails.id).padStart(4, '0')}</span></Row>
+            </dl>
+            <button type="button" className="btn btn-primary w-full mt-5" onClick={handleApply}>Apply with portfolio</button>
+            <button type="button" className="btn btn-secondary w-full mt-2" onClick={handleViewPortofolio}>Review my portfolio</button>
+            <p className="text-xs text-ink-3 mt-4 leading-5">Your portal portfolio is shared with the poster when you apply. Listings expire 30 days after posting.</p>
+          </div>
+        </aside>
+      </div>
+
+      {isApplyModalOpen && (
+        <div className="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-6" onMouseDown={handleCloseApplyModal}>
+          <div className="card shadow-pop w-full max-w-[460px]" role="dialog" aria-modal="true" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between px-6 pt-5">
+              <div>
+                <div className="eyebrow">Apply</div>
+                <h2 className="text-lg mt-1">{jobDetails.jobTitle}</h2>
+              </div>
+              <button type="button" aria-label="Close" className="h-8 w-8 inline-flex items-center justify-center rounded-ctl text-ink-3 hover:bg-canvas" style={{ margin: 0 }} onClick={handleCloseApplyModal}>
+                <FiX />
+              </button>
+            </div>
+            <div className="px-6 py-4 text-sm text-ink-2 leading-6">
+              {applyState.status === 'done' ? (
+                <div className="flex gap-3 items-start">
+                  <span className="h-8 w-8 shrink-0 rounded-full bg-success-soft text-success inline-flex items-center justify-center"><FiCheck /></span>
+                  <div>
+                    <div className="font-medium text-ink">Application sent</div>
+                    <div className="text-ink-3">Your portfolio was shared with {jobDetails.postedBy}, who will contact you directly.</div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  Your IST portfolio (profile, education, experience and skills) will be shared with <span className="font-medium text-ink">{jobDetails.postedBy}</span>.
+                  {applyState.status === 'error' && <div className="mt-3"><Notice tone="danger">{applyState.message}</Notice></div>}
+                </>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-line flex justify-end gap-2 bg-canvas rounded-b-card">
+              {applyState.status === 'done' ? (
+                <button type="button" className="btn btn-primary" onClick={handleCloseApplyModal}>Done</button>
+              ) : (
+                <>
+                  <button type="button" className="btn btn-ghost" onClick={handleCloseApplyModal}>Cancel</button>
+                  <button type="button" className="btn btn-secondary" onClick={handleViewPortofolio}>View portfolio</button>
+                  <button id="apply-confirm" type="button" className="btn btn-primary" disabled={applyState.status === 'sending'} onClick={handleApplyWithPortfolio}>
+                    {applyState.status === 'sending' ? 'Sending…' : 'Apply with portfolio'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </AppShell>
+  );
 }
 
 export default Jobdescription;
-
-
-
-
-

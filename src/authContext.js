@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('name', data.name);
         localStorage.setItem('email', data.email);
         localStorage.setItem('role', JSON.stringify(data.role));
-        alert('Login successful');
         return true;
       } else {
         return false; // Login failed
